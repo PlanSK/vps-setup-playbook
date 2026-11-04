@@ -1,0 +1,3 @@
+---
+unattended_autoclean_interval: 7
+unattended_reboot: false

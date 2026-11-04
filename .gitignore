@@ -1,0 +1,17 @@
+inventories/production/hosts.yml
+
+inventories/production/group_vars/all/vault.yml
+.vault_pass
+*.vault
+
+*.retry
+.ansible
+
+.venv/
+__pycache__/
+*.pyc
+
+.idea/
+.vscode/
+
+roles/users/files/authorized_keys.pub

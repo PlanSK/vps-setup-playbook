@@ -1,0 +1,10 @@
+---
+all:
+  children:
+    vps_server:
+      hosts:
+        vps1:
+          ansible_host: 192.0.2.10
+          ansible_user: root
+          ansible_password: "CHANGE_ME"
+          ansible_python_interpreter: /usr/bin/python3

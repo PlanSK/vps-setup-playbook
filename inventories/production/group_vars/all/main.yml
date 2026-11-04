@@ -1,0 +1,4 @@
+---
+swap_size_gb: 2
+ssh_port: 2022
+admin_user: plan

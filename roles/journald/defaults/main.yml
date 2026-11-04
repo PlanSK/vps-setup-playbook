@@ -1,0 +1,3 @@
+---
+journald_storage: persistent
+journald_system_max_use: 500M

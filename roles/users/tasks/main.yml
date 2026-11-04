@@ -1,0 +1,78 @@
+---
+- name: Get zsh path
+  ansible.builtin.command: which zsh
+  register: zsh_path
+  changed_when: false
+
+- name: Set root shell to zsh
+  ansible.builtin.user:
+    name: root
+    shell: "{{ zsh_path.stdout }}"
+
+- name: Create admin user
+  ansible.builtin.user:
+    name: "{{ admin_user }}"
+    shell: "{{ zsh_path.stdout }}"
+    groups: "{{ admin_groups }}"
+    append: true
+    state: present
+    password: "{{ vault_admin_password_hash }}"
+
+- name: Ensure .oh-my-zsh directory absent check
+  ansible.builtin.stat:
+    path: "/home/{{ admin_user }}/.oh-my-zsh"
+  register: oh_my_zsh_dir
+
+- name: Download Oh My Zsh installer
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+    dest: /tmp/install_oh_my_zsh.sh
+    mode: '0755'
+  when: not oh_my_zsh_dir.stat.exists
+
+- name: Install Oh My Zsh unattended
+  ansible.builtin.command: /tmp/install_oh_my_zsh.sh --unattended
+  args:
+    creates: "/home/{{ admin_user }}/.oh-my-zsh"
+  become_user: "{{ admin_user }}"
+  when: not oh_my_zsh_dir.stat.exists
+
+- name: Remove Oh My Zsh installer
+  ansible.builtin.file:
+    path: /tmp/install_oh_my_zsh.sh
+    state: absent
+
+- name: Clone zsh-autosuggestions
+  ansible.builtin.git:
+    repo: https://github.com/zsh-users/zsh-autosuggestions.git
+    dest: "/home/{{ admin_user }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+    version: master
+    depth: 1
+  become_user: "{{ admin_user }}"
+
+- name: Clone zsh-syntax-highlighting
+  ansible.builtin.git:
+    repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+    dest: "/home/{{ admin_user }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+    version: master
+    depth: 1
+  become_user: "{{ admin_user }}"
+
+- name: Copy .zshrc
+  ansible.builtin.copy:
+    src: zshrc
+    dest: "/home/{{ admin_user }}/.zshrc"
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    mode: '0644'
+
+- name: Read authorized_keys pub file
+  ansible.builtin.set_fact:
+    yubikeys_list: "{{ lookup('ansible.builtin.file', role_path + '/files/authorized_keys.pub').splitlines() | select('match', '^ssh-|^sk-ssh-') | list }}"
+
+- name: Add authorized keys
+  ansible.builtin.authorized_key:
+    user: "{{ admin_user }}"
+    state: present
+    key: "{{ item }}"
+  loop: "{{ yubikeys_list }}"

@@ -1,0 +1,5 @@
+---
+admin_user: plan
+admin_groups:
+  - sudo
+

@@ -1,0 +1,8 @@
+---
+docker_users:
+  - "{{ admin_user }}"
+
+docker_daemon_config:
+  registry-mirrors:
+    - "https://dockerhub.timeweb.cloud"
+    - "https://mirror.gcr.io"

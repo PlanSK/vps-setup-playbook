@@ -1,0 +1,30 @@
+---
+- name: Ensure journald drop-in directory exists
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy journald persistence config
+  ansible.builtin.template:
+    src: journald-persistent.conf.j2
+    dest: /etc/systemd/journald.conf.d/99-persistent.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart journald
+
+- name: Ensure persistent journal directory exists
+  ansible.builtin.file:
+    path: /var/log/journal
+    state: directory
+    owner: root
+    group: systemd-journal
+    mode: '2755'
+
+- name: Flush journal to persistent storage
+  ansible.builtin.command: journalctl --flush
+  changed_when: false
+  when: journald_storage == "persistent"

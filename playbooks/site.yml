@@ -1,0 +1,14 @@
+---
+- name: Configure VPS
+  hosts: vps_server
+  become: true
+
+  roles:
+    - base
+    - journald
+    - users
+    - ssh_hardening
+    - firewall
+    - fail2ban
+    - unattended_upgrades
+    - docker

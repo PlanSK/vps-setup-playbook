@@ -1,0 +1,85 @@
+---
+- name: Update apt cache and upgrade packages
+  ansible.builtin.apt:
+    update_cache: yes
+    upgrade: dist
+    cache_valid_time: 3600
+
+- name: Install base utilities
+  ansible.builtin.apt:
+    name:
+      - zsh
+      - sudo
+      - curl
+      - git
+      - mc
+      - rsync
+      - acl
+    state: present
+
+- name: Create swap file
+  ansible.builtin.command: "fallocate -l {{ swap_size_gb }}G /swapfile"
+  args:
+    creates: /swapfile
+  when: swap_size_gb | int > 0
+
+- name: Set swap file permissions
+  ansible.builtin.file:
+    path: /swapfile
+    owner: root
+    group: root
+    mode: '0600'
+  when: swap_size_gb | int > 0
+
+- name: Check if swapfile is formatted
+  ansible.builtin.command: blkid -o value -s TYPE /swapfile
+  register: swapfile_type
+  changed_when: false
+  failed_when: false
+  when: swap_size_gb | int > 0
+
+- name: Format swap file
+  ansible.builtin.command: mkswap /swapfile
+  when:
+    - swap_size_gb | int > 0
+    - swapfile_type.stdout != "swap"
+
+- name: Enable swap in fstab
+  ansible.posix.mount:
+    name: none
+    src: /swapfile
+    fstype: swap
+    opts: sw
+    passno: 0
+    dump: 0
+    state: present
+  when: swap_size_gb | int > 0
+
+- name: Enable swap now
+  ansible.builtin.command: swapon /swapfile
+  when:
+    - swap_size_gb | int > 0
+    - ansible_facts['swaptotal_mb'] | int == 0
+
+- name: Configure BBR sysctl
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-bbr.conf
+    content: |
+      net.core.default_qdisc = fq
+      net.ipv4.tcp_congestion_control = bbr
+    owner: root
+    group: root
+    mode: '0644'
+  register: bbr_config
+
+- name: Reload sysctl if BBR config changed
+  ansible.builtin.command: sysctl --system
+  when: bbr_config.changed
+
+- name: Manage /etc/hosts block
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    block: |
+      127.0.0.1 localhost.localdomain localhost
+    marker: "# {mark} ANSIBLE MANAGED BLOCK"
+

@@ -1,0 +1,15 @@
+---
+- name: Install nftables
+  ansible.builtin.apt:
+    name: nftables
+    state: present
+    update_cache: true
+
+- name: Verify nftables binary is available
+  ansible.builtin.command: nft --version
+  register: nft_version
+  changed_when: false
+
+- name: Show nftables version
+  ansible.builtin.debug:
+    msg: "{{ nft_version.stdout }}"
