@@ -10,4 +10,5 @@ Unattended-Upgrade::MinimalSteps "true";
 Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
 Unattended-Upgrade::Remove-Unused-Dependencies "true";
 Unattended-Upgrade::Automatic-Reboot "{{ 'true' if unattended_reboot else 'false' }}";
+Unattended-Upgrade::Automatic-Reboot-Time "{{ unattended_reboot_time }}";
 Unattended-Upgrade::Automatic-Reboot-WithUsers "false";

@@ -1,3 +1,4 @@
 ---
 unattended_autoclean_interval: 7
-unattended_reboot: false
+unattended_reboot: true
+unattended_reboot_time: "02:00"
