@@ -38,6 +38,16 @@
     state: absent
   loop: "{{ sshd_dropins.files }}"
 
+- name: Remove explicit KexAlgorithms, Ciphers, MACs to restore defaults (PQ)
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^{{ item }} "
+    state: absent
+  loop:
+    - KexAlgorithms
+    - Ciphers
+    - MACs
+
 - name: Deploy hardened sshd_config
   ansible.builtin.template:
     src: sshd_config.j2
