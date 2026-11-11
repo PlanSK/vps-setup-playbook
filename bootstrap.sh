@@ -22,6 +22,13 @@ KEYS_PUB="roles/users/files/authorized_keys.pub"
 KEYS_EXAMPLE="roles/users/files/authorized_keys.pub.example"
 
 # ---------------------------------------------------------------
+# 0. Install dependencies
+# ---------------------------------------------------------------
+info "Installing Ansible collections from requirements.yml..."
+[[ -f requirements.yml ]] || error "requirements.yml not found."
+ansible-galaxy collection install -r requirements.yml
+
+# ---------------------------------------------------------------
 # 1. Ansible-vault password
 # ---------------------------------------------------------------
 if [[ -f "$VAULT_PASS_FILE" ]]; then
