@@ -13,38 +13,55 @@ Ansible playbook for initial configuration of a Debian 13 VPS.
 - `unattended_upgrades` — automatic security updates
 - `docker` — Docker CE, compose plugin, registry mirrors
 
+# VPS Setup Ansible
+
+Ansible playbook for initial configuration of a Debian 13 VPS.
+
+## What is configured
+
+- `base` — package updates, swap, BBR, /etc/hosts
+- `journald` — persistent journal, 500M limit
+- `users` — admin user, zsh + oh-my-zsh, authorized_keys (YubiKey)
+- `ssh_hardening` — custom SSH port, disable root/password auth, clean sshd_config.d, restore PQ defaults
+- `firewall` — nftables
+- `fail2ban` — SSH jail via nftables
+- `unattended_upgrades` — automatic security updates, reboot at 02:00
+- `docker` — Docker CE, compose plugin, registry mirrors
+
 ## Requirements
 
-- Ansible >= 2.15
-- Collections from `requirements.yml`
+- Ansible >= 2.15 (install separately: `pacman -S ansible` / `apt install ansible`)
+- Collections are installed automatically by `bootstrap.sh`
 
-## Install collections
+## Quick start
+
+Make the script executable and run it:
 
 ```bash
-ansible-galaxy collection install -r requirements.yml
+    chmod +x bootstrap.sh
+    ./bootstrap.sh
 ```
 
-## Preparation
+The script will interactively:
 
-1. Copy the example inventory:
-   ```bash
-   cp inventories/production/hosts.yml.example inventories/production/hosts.yml
-   ```
-   Edit IP, user, and port.
+- install required collections from `requirements.yml`
+- ask for the `ansible-vault` password and create `.vault_pass`
+- generate and encrypt `vault.yml` with the admin user password hash
+- generate `main.yml` (swap size, SSH port, admin user)
+- collect one or more VPS hosts and generate `hosts.yml`
+- prompt to fill `authorized_keys.pub`
+- run `ansible-playbook --syntax-check`
 
-2. Create `vault.yml` from the example:
-   ```bash
-   cp inventories/production/group_vars/all/vault.yml.example \
-      inventories/production/group_vars/all/vault.yml
-   ansible-vault encrypt inventories/production/group_vars/all/vault.yml
-   ```
-
-3. Put your YubiKey public keys into `roles/users/files/authorized_keys.pub` (one per line).
-
-## Usage
+Then run the playbook:
 
 ```bash
-ansible-playbook playbooks/site.yml --ask-become-pass
+    ansible-playbook playbooks/site.yml --ask-become-pass
+```
+
+Or selectively:
+
+```bash
+    ansible-playbook playbooks/site.yml --limit vps1 --ask-become-pass
 ```
 
 ## Idempotency check
@@ -52,28 +69,33 @@ ansible-playbook playbooks/site.yml --ask-become-pass
 A second run should report `changed=0`:
 
 ```bash
-ansible-playbook playbooks/site.yml --ask-become-pass
+    ansible-playbook playbooks/site.yml --ask-become-pass
 ```
 
 ## Structure
 
-```
-.
-├── ansible.cfg
-├── requirements.yml
-├── inventories/production/
-│   ├── hosts.yml             (not in git)
-│   └── group_vars/all/
-│       ├── main.yml
-│       └── vault.yml         (encrypted in git)
-├── playbooks/site.yml
-└── roles/
-    ├── base/
-    ├── journald/
-    ├── users/
-    ├── ssh_hardening/
-    ├── firewall/
-    ├── fail2ban/
-    ├── unattended_upgrades/
-    └── docker/
-```
+    .
+    ├── ansible.cfg
+    ├── bootstrap.sh
+    ├── requirements.yml
+    ├── inventories/production/
+    │   ├── hosts.yml             (not in git)
+    │   └── group_vars/all/
+    │       ├── main.yml          (not in git)
+    │       └── vault.yml         (encrypted, not in git)
+    ├── playbooks/site.yml
+    └── roles/
+        ├── base/
+        ├── journald/
+        ├── users/
+        ├── ssh_hardening/
+        ├── firewall/
+        ├── fail2ban/
+        ├── unattended_upgrades/
+        └── docker/
+
+## Notes
+
+- `hosts.yml`, `main.yml`, `vault.yml` and `.vault_pass` are generated locally and excluded from git via `.gitignore`.
+- Example templates (`*.example`) are committed to the repository.
+- `roles/users/files/authorized_keys.pub` is excluded from git; use `authorized_keys.pub.example` as a placeholder.
