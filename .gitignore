@@ -1,6 +1,7 @@
 inventories/production/hosts.yml
 
 inventories/production/group_vars/all/vault.yml
+inventories/production/group_vars/all/main.yml
 .vault_pass
 *.vault
 

@@ -1,0 +1,4 @@
+---
+swap_size_gb: 1
+ssh_port: 1111
+admin_user: admin

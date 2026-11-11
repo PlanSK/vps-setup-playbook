@@ -6,7 +6,7 @@ Ansible playbook for initial configuration of a Debian 13 VPS.
 
 - `base` — package updates, swap, BBR, /etc/hosts
 - `journald` — persistent journal, 500M limit
-- `users` — `plan` user, zsh + oh-my-zsh, authorized_keys (YubiKey)
+- `users` — `admin` user, zsh + oh-my-zsh, authorized_keys (YubiKey)
 - `ssh_hardening` — port 2022, disable root/password auth, clean sshd_config.d
 - `firewall` — nftables
 - `fail2ban` — SSH jail via nftables
